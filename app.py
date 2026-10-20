@@ -2,19 +2,17 @@ import json
 import streamlit as st
 
 st.set_page_config(
-    page_title="IELTS & CEFR Vocabulary Shooter",
-    page_icon="🦋",
-    layout="centered",
+    page_title="IELTS Vocabulary Shooter Pro", page_icon="🦋", layout="wide"
 )
 
-st.title("🦋 Trò Chơi Ôn Luyện Từ Vựng Đa Thiết Bị (A1 - C2)")
+st.title("🦋 Trò Chơi Ôn Luyện Từ Vựng IELTS Đa Năng")
 st.write(
-    "Hỗ trợ trên Điện thoại, Máy tính bảng, Laptop và PC! Chọn cấp độ và chủ"
-    " đề để bắt đầu."
+    "Lựa chọn cấp độ, chủ đề, kiểu bàn phím yêu thích và giúp chú bướm chinh phục"
+    " từ vựng!"
 )
 
-# --- PHẦN ĐIỀU KHIỂN TRÊN GIAO DIỆN STREAMLIT ---
-col1, col2 = st.columns(2)
+# --- BẢNG ĐIỀU KHIỂN TRÊN GIAO DIỆN STREAMLIT ---
+col1, col2, col3 = st.columns(3)
 
 with col1:
   selected_level = st.selectbox(
@@ -32,12 +30,18 @@ with col2:
       ],
   )
 
+with col3:
+  keyboard_layout = st.selectbox(
+      "⌨️ Kiểu Bàn phím ảo:",
+      ["Laptop / PC (QWERTY)", "Điện thoại (Phone Layout)"],
+  )
+
 st.info(
-    f"👉 Đang ôn luyện: Trình độ **{selected_level}** - Chủ đề:"
-    f" **{selected_topic}**"
+    f"👉 Đang ôn luyện: Trình độ **{selected_level}** | Chủ đề:"
+    f" **{selected_topic}** | Kiểu bàn phím: **{keyboard_layout}**"
 )
 
-# Dữ liệu từ vựng mẫu phân loại theo chủ đề và trình độ
+# Kho từ vựng chi tiết theo cấp độ và chủ đề
 vocab_data = {
     "A1": [
         {
@@ -68,13 +72,20 @@ vocab_data = {
             "mean": "Học tập",
             "topic": "Education & Career",
         },
+        {
+            "word": "book",
+            "display": "boo_",
+            "missing": "k",
+            "mean": "Sách",
+            "topic": "Education & Career",
+        },
     ],
     "A2": [
         {
             "word": "energy",
             "display": "energ_",
             "missing": "y",
-            "mean": "N năng lượng",
+            "mean": "Năng lượng",
             "topic": "Environment & Nature",
         },
         {
@@ -97,6 +108,13 @@ vocab_data = {
             "missing": "h",
             "mean": "Sức khỏe",
             "topic": "Health & Lifestyle",
+        },
+        {
+            "word": "river",
+            "display": "rive_",
+            "missing": "r",
+            "mean": "Dòng sông",
+            "topic": "Environment & Nature",
         },
     ],
     "B1": [
@@ -127,6 +145,13 @@ vocab_data = {
             "missing": "s",
             "mean": "Thể lực",
             "topic": "Health & Lifestyle",
+        },
+        {
+            "word": "climate",
+            "display": "climat_",
+            "missing": "e",
+            "mean": "Khí hậu",
+            "topic": "Environment & Nature",
         },
     ],
     "B2": [
@@ -216,9 +241,20 @@ if not filtered_words:
   filtered_words = vocab_data.get(selected_level, vocab_data["B2"])
 
 vocab_json = json.dumps(filtered_words)
-speed_val = 1.4 if selected_level in ["C1", "C2"] else 1.2
 
-# --- MÃ NGUỒN GAME HTML/JS HỖ TRỢ RESPONSIVE VÀ BÀN PHÍM ẢO ---
+# Tốc độ rơi được chỉnh chậm hơn rõ rệt (0.5 đến 0.7)
+slow_speed = 0.5 if selected_level in ["C1", "C2"] else 0.45
+
+# Định nghĩa cấu hình bàn phím ảo theo yêu cầu
+if keyboard_layout == "Laptop / PC (QWERTY)":
+  kb_rows = ["qwertyuiop", "asdfghjkl", "zxcvbnm"]
+else:
+  # Kiểu bàn phím điện thoại tối ưu ngón tay khi cầm dọc
+  kb_rows = ["123", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"]
+
+kb_json = json.dumps(kb_rows)
+
+# --- MÃ NGUỒN GAME HTML/JS ---
 game_code = f"""
 <!DOCTYPE html>
 <html>
@@ -235,7 +271,7 @@ game_code = f"""
         #game-container {{
             position: relative;
             width: 100%;
-            max-width: 480px;
+            max-width: 650px;
             margin: 0 auto;
         }}
         canvas {{
@@ -245,38 +281,43 @@ game_code = f"""
             height: auto;
             border-radius: 12px;
             border: 3px solid #ff69b4;
-            box-shadow: 0 0 20px rgba(255, 105, 180, 0.4);
+            box-shadow: 0 0 25px rgba(255, 105, 180, 0.4);
         }}
         .info-bar {{
             display: flex;
             justify-content: space-between;
             background: #282a36;
-            padding: 8px 15px;
+            padding: 10px 20px;
             border-radius: 8px;
             margin-bottom: 8px;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 15px;
             color: #f1fa8c;
         }}
-        /* Bàn phím ảo dành cho điện thoại/máy tính bảng */
         .virtual-keyboard {{
             display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 5px;
-            margin-top: 10px;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            margin-top: 12px;
             padding: 0 5px;
+        }}
+        .kb-row {{
+            display: flex;
+            gap: 6px;
+            justify-content: center;
         }}
         .key-btn {{
             background: #44475a;
             color: white;
             border: none;
-            border-radius: 5px;
-            padding: 10px 14px;
+            border-radius: 6px;
+            padding: 12px 16px;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 4px #282a36;
+            min-width: 38px;
         }}
         .key-btn:active {{
             background: #ff69b4;
@@ -292,9 +333,10 @@ game_code = f"""
             <span id="unit-info">📌 {selected_level} - {selected_topic}</span>
             <span id="score-info">🏆 Điểm: 0</span>
         </div>
-        <canvas id="gameCanvas" width="480" height="420"></canvas>
+        <!-- Khung Canvas rộng và lớn hơn -->
+        <canvas id="gameCanvas" width="650" height="480"></canvas>
         
-        <!-- Bàn phím ảo bấm trực tiếp trên màn hình cảm ứng -->
+        <!-- Bàn phím ảo tương thích -->
         <div class="virtual-keyboard" id="keyboard"></div>
     </div>
 
@@ -303,13 +345,15 @@ game_code = f"""
         const ctx = canvas.getContext("2d");
 
         const vocabList = {vocab_json};
-        const fallSpeed = {speed_val};
+        const fallSpeed = {slow_speed};
+        const kbRows = {kb_json};
 
         let score = 0;
-        let currentTarget = null;
+        let targets = []; // Cho phép chứa nhiều từ vựng xuất hiện song song
         let bullets = [];
         let particles = [];
         let isGameOver = false;
+        let spawnTimer = 0;
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -354,77 +398,108 @@ game_code = f"""
             height: 50
         }};
 
+        // Tạo từ vựng liên tục theo thời gian (xuất hiện chậm rãi, lần lượt/song song)
         function spawnTarget() {{
             if (vocabList.length === 0) return;
             const randomIndex = Math.floor(Math.random() * vocabList.length);
             const item = vocabList[randomIndex];
-            currentTarget = {{
+            
+            // Tránh sinh trùng quá gần vị trí ngang nhau
+            let randomX = Math.random() * (canvas.width - 160) + 20;
+            
+            targets.push({{
                 ...item,
-                x: Math.random() * (canvas.width - 140) + 15,
-                y: -40,
+                x: randomX,
+                y: -50,
                 speed: fallSpeed
-            }};
+            }});
         }}
 
+        // Xử lý khi người chơi bấm ký tự
         function handleInput(typedKey) {{
             if (audioCtx.state === 'suspended') {{
                 audioCtx.resume();
             }}
-            if (isGameOver || !currentTarget) return;
+            if (isGameOver) return;
 
-            if (typedKey === currentTarget.missing) {{
-                playSound("shoot");
-                bullets.push({{
-                    x: player.x + player.width / 2,
-                    y: player.y,
-                    targetX: currentTarget.x + 60,
-                    targetY: currentTarget.y + 20,
-                    speed: 12
-                }});
+            typedKey = typedKey.toLowerCase();
+
+            // Tìm từ vựng nào trên màn hình có ký tự thiếu khớp với phím vừa gõ
+            for (let i = 0; i < targets.length; i++) {{
+                let t = targets[i];
+                if (typedKey === t.missing) {{
+                    playSound("shoot");
+                    // Bắn đạn hướng về từ vựng đó
+                    bullets.push({{
+                        x: player.x + player.width / 2,
+                        y: player.y,
+                        targetId: i,
+                        targetX: t.x + 65,
+                        targetY: t.y + 20,
+                        speed: 10
+                    }});
+                    break; // Bắn từ đầu tiên tìm thấy khớp
+                }}
             }}
         }}
 
-        // Hỗ trợ gõ phím từ bàn phím máy tính / laptop
+        // Bàn phím cứng máy tính
         document.addEventListener("keydown", function(e) {{
-            handleInput(e.key.toLowerCase());
+            handleInput(e.key);
         }});
 
-        // Tự động tạo bàn phím ảo A-Z cho điện thoại và máy tính bảng
-        const alphabet = "abcdefghijklmnopqrstuvwxyz".split("");
+        // Khởi tạo bàn phím ảo hiển thị theo layout học sinh chọn
         const keyboardDiv = document.getElementById("keyboard");
-        alphabet.forEach(letter => {{
-            const btn = document.createElement("button");
-            btn.innerText = letter.toUpperCase();
-            btn.className = "key-btn";
-            btn.onclick = () => handleInput(letter);
-            keyboardDiv.appendChild(btn);
+        kbRows.forEach(rowStr => {{
+            const rowDiv = document.createElement("div");
+            rowDiv.className = "kb-row";
+            for (let char of rowStr) {{
+                const btn = document.createElement("button");
+                btn.innerText = char.toUpperCase();
+                btn.className = "key-btn";
+                btn.onclick = () => handleInput(char);
+                rowDiv.appendChild(btn);
+            }}
+            keyboardDiv.appendChild(rowDiv);
         }});
 
         function update() {{
             if (isGameOver) return;
 
-            if (!currentTarget) {{
+            spawnTimer++;
+            // Cứ khoảng 130 khung hình thì sinh thêm 1 từ vựng mới rơi xuống (tạo độ giãn cách chậm rãi, lần lượt)
+            if (spawnTimer > 130) {{
                 spawnTarget();
-            }} else {{
-                currentTarget.y += currentTarget.speed;
+                spawnTimer = 0;
+            }}
 
-                if (currentTarget.y > canvas.height - 60) {{
+            // Cập nhật vị trí các từ vựng đang rơi
+            for (let i = targets.length - 1; i >= 0; i--) {{
+                targets[i].y += targets[i].speed;
+
+                // Nếu có từ vựng chạm gần đáy màn hình -> Game Over
+                if (targets[i].y > canvas.height - 70) {{
                     isGameOver = true;
                     playSound("gameover");
                 }}
             }}
 
+            // Cập nhật đường đạn bay
             for (let i = bullets.length - 1; i >= 0; i--) {{
                 let b = bullets[i];
                 b.y -= b.speed;
 
-                if (currentTarget && b.y <= currentTarget.y + 30) {{
+                // Kiểm tra nếu đạn chạm mục tiêu
+                let targetObj = targets[b.targetId];
+                if (targetObj && b.y <= targetObj.y + 30) {{
                     score += 10;
                     document.getElementById("score-info").innerText = "🏆 Điểm: " + score;
                     playSound("hit");
-                    createExplosion(currentTarget.x + 50, currentTarget.y + 20);
+                    createExplosion(targetObj.x + 65, targetObj.y + 20);
+                    
+                    // Xóa từ vựng đã bắn trúng khỏi màn hình
+                    targets.splice(b.targetId, 1);
                     bullets.splice(i, 1);
-                    currentTarget = null;
                     break;
                 }}
             }}
@@ -454,33 +529,33 @@ game_code = f"""
         function draw() {{
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Vẽ Chú bướm
+            // 1. Vẽ Chú bướm nhân vật
             ctx.fillStyle = "#ff69b4";
             ctx.beginPath();
             ctx.arc(player.x + 25, player.y + 25, 20, 0, Math.PI * 2);
             ctx.fill();
             ctx.fillStyle = "#000";
-            ctx.font = "24px Arial";
-            ctx.fillText("🦋", player.x + 10, player.y + 34);
+            ctx.font = "26px Arial";
+            ctx.fillText("🦋", player.x + 8, player.y + 35);
 
-            // Vẽ Từ vựng
-            if (currentTarget) {{
+            // 2. Vẽ tất cả các từ vựng đang rơi trên màn hình
+            targets.forEach(t => {{
                 ctx.fillStyle = "#ff9800";
                 ctx.shadowColor = "#ff5722";
                 ctx.shadowBlur = 10;
-                ctx.fillRect(currentTarget.x, currentTarget.y, 130, 40);
+                ctx.fillRect(t.x, t.y, 140, 45);
                 ctx.shadowBlur = 0;
 
                 ctx.fillStyle = "#ffffff";
-                ctx.font = "bold 17px Arial";
-                ctx.fillText(currentTarget.display, currentTarget.x + 10, currentTarget.y + 23);
+                ctx.font = "bold 18px Arial";
+                ctx.fillText(t.display, t.x + 10, t.y + 25);
 
                 ctx.fillStyle = "#e0e0e0";
                 ctx.font = "italic 11px Arial";
-                ctx.fillText("(" + currentTarget.mean + ")", currentTarget.x + 10, currentTarget.y + 36);
-            }}
+                ctx.fillText("(" + t.mean + ")", t.x + 10, t.y + 40);
+            }});
 
-            // Vẽ Đạn
+            // 3. Vẽ Đạn
             ctx.fillStyle = "#00ffff";
             bullets.forEach(b => {{
                 ctx.beginPath();
@@ -488,7 +563,7 @@ game_code = f"""
                 ctx.fill();
             }});
 
-            // Vẽ Hiệu ứng hạt
+            // 4. Hiệu ứng hạt nổ
             particles.forEach(p => {{
                 ctx.save();
                 ctx.globalAlpha = p.alpha;
@@ -497,19 +572,19 @@ game_code = f"""
                 ctx.restore();
             }});
 
-            // Màn hình Game Over
+            // 5. Màn hình Game Over
             if (isGameOver) {{
                 ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
                 ctx.fillStyle = "#ff4757";
-                ctx.font = "bold 28px Arial";
-                ctx.fillText("GAME OVER", canvas.width / 2 - 80, 180);
+                ctx.font = "bold 32px Arial";
+                ctx.fillText("GAME OVER", canvas.width / 2 - 90, 200);
 
                 ctx.fillStyle = "#ffffff";
-                ctx.font = "16px Arial";
-                ctx.fillText("Từ vựng đã chạm đáy!", canvas.width / 2 - 85, 220);
-                ctx.fillText("Tải lại trang để chơi lại vòng mới!", canvas.width / 2 - 115, 250);
+                ctx.font = "18px Arial";
+                ctx.fillText("Có từ vựng đã chạm đáy màn hình!", canvas.width / 2 - 145, 240);
+                ctx.fillText("Tải lại trang để thử lại vòng chơi mới nhé!", canvas.width / 2 - 160, 280);
             }}
         }}
 
@@ -519,10 +594,12 @@ game_code = f"""
             requestAnimationFrame(loop);
         }}
 
+        // Khởi tạo ngay từ đầu một từ vựng
+        spawnTarget();
         loop();
     </script>
 </body>
 </html>
 """
 
-st.components.v1.html(game_code, height=620)
+st.components.v1.html(game_code, height=600)
