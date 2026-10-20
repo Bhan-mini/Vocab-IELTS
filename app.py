@@ -345,7 +345,7 @@ else:
 
 kb_json = json.dumps(kb_rows)
 
-# --- MÃ NGUỒN GAME HTML/JS AN TOÀN ---
+# --- MÃ NGUỒN GAME HTML/JS ---
 game_code = (
     """
 <!DOCTYPE html>
@@ -363,7 +363,7 @@ game_code = (
         #game-container {
             position: relative;
             width: 100%;
-            max-width: 750px;
+            max-width: 800px;
             margin: 0 auto;
         }
         canvas {
@@ -383,7 +383,7 @@ game_code = (
             border-radius: 8px;
             margin-bottom: 8px;
             font-weight: bold;
-            font-size: 15px;
+            font-size: 16px;
             color: #f1fa8c;
         }
         .virtual-keyboard {
@@ -429,7 +429,7 @@ game_code = (
     + """</span>
             <span id="score-info">🏆 Điểm: 0</span>
         </div>
-        <canvas id="gameCanvas" width="750" height="500"></canvas>
+        <canvas id="gameCanvas" width="800" height="520"></canvas>
         <div class="virtual-keyboard" id="keyboard"></div>
     </div>
 
@@ -542,13 +542,13 @@ game_code = (
             usedVocabQueue.push(item.word);
             if (usedVocabQueue.length > 3) usedVocabQueue.shift();
 
-            let randomX = Math.random() * (canvas.width - 200) + 20;
+            let randomX = Math.random() * (canvas.width - 220) + 20;
             let currentSpeed = 0.35 + (levelsOrder.indexOf(currentLevel) * 0.05);
 
             targets.push({
                 ...item,
                 x: randomX,
-                y: -60,
+                y: -70,
                 speed: currentSpeed
             });
         }
@@ -569,8 +569,8 @@ game_code = (
                         x: player.x + player.width / 2,
                         y: player.y,
                         targetId: i,
-                        targetX: t.x + 80,
-                        targetY: t.y + 20,
+                        targetX: t.x + 95,
+                        targetY: t.y + 25,
                         speed: 10
                     });
                     break;
@@ -620,11 +620,11 @@ game_code = (
                 b.y -= b.speed;
 
                 let targetObj = targets[b.targetId];
-                if (targetObj && b.y <= targetObj.y + 30) {
+                if (targetObj && b.y <= targetObj.y + 35) {
                     score += 10;
                     document.getElementById("score-info").innerText = "🏆 Điểm: " + score;
                     playSound("hit");
-                    createExplosion(targetObj.x + 80, targetObj.y + 20);
+                    createExplosion(targetObj.x + 95, targetObj.y + 25);
 
                     if (score > 0 && score % 100 === 0) {
                         let currentIndex = levelsOrder.indexOf(currentLevel);
@@ -682,16 +682,19 @@ game_code = (
                 ctx.fillStyle = "#ff9800";
                 ctx.shadowColor = "#ff5722";
                 ctx.shadowBlur = 10;
-                ctx.fillRect(t.x, t.y, 170, 45);
+                // Khung chữ nhật rộng và cao hơn để chứa cỡ chữ lớn
+                ctx.fillRect(t.x, t.y, 200, 55);
                 ctx.shadowBlur = 0;
 
+                // Phóng to kích thước chữ tiếng Anh lên 22px
                 ctx.fillStyle = "#ffffff";
-                ctx.font = "bold 17px Arial";
-                ctx.fillText(t.display, t.x + 10, t.y + 24);
+                ctx.font = "bold 22px Arial";
+                ctx.fillText(t.display, t.x + 12, t.y + 30);
 
+                // Phóng to nghĩa tiếng Việt lên 13px
                 ctx.fillStyle = "#e0e0e0";
-                ctx.font = "italic 11px Arial";
-                ctx.fillText("(" + t.mean + ")", t.x + 10, t.y + 40);
+                ctx.font = "italic 13px Arial";
+                ctx.fillText("(" + t.mean + ")", t.x + 12, t.y + 48);
             });
 
             ctx.fillStyle = "#00ffff";
@@ -711,8 +714,8 @@ game_code = (
 
             if (levelUpMessageTimer > 0) {
                 ctx.fillStyle = "rgba(255, 215, 0, 0.9)";
-                ctx.font = "bold 28px Arial";
-                ctx.fillText("🎉 THĂNG CẤP LÊN " + currentLevel + "! 🎉", canvas.width / 2 - 180, 100);
+                ctx.font = "bold 30px Arial";
+                ctx.fillText("🎉 THĂNG CẤP LÊN " + currentLevel + "! 🎉", canvas.width / 2 - 200, 100);
             }
 
             if (isGameOver) {
