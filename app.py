@@ -1,4 +1,5 @@
 import json
+import random
 import streamlit as st
 
 st.set_page_config(
@@ -7,7 +8,7 @@ st.set_page_config(
 
 st.title("🦋 Trò Chơi Ôn Luyện Từ Vựng IELTS - Chinh Phục Cấp Độ")
 st.write(
-    "Hệ thống từ vựng chuẩn IELTS Reading, phóng to chữ siêu lớn, không lặp từ"
+    "Hệ thống từ vựng chuẩn IELTS Reading, chữ cái cần điền xuất hiện ngẫu nhiên"
     " và tự động thăng cấp!"
 )
 
@@ -41,674 +42,203 @@ st.info(
     f" **{selected_topic}** (Tự động thăng cấp sau mỗi 100 điểm!)"
 )
 
-# KHO TỪ VỰNG KHỔNG LỒ VÀ ĐA DẠNG KHÔNG BỊ TRÙNG LẶP
-vocab_database = {
+# KHO TỪ VỰNG GỐC (Hệ thống sẽ tự động chọn ngẫu nhiên vị trí chữ cái cần điền)
+raw_vocab_database = {
     "A1": {
         "Environment & Nature": [
-            {
-                "word": "water",
-                "display": "WATE [ R ]",
-                "missing": "r",
-                "mean": "Nước",
-            },
-            {
-                "word": "plant",
-                "display": "PLAN [ T ]",
-                "missing": "t",
-                "mean": "Thực vật",
-            },
-            {
-                "word": "tree",
-                "display": "TRE [ E ]",
-                "missing": "e",
-                "mean": "Cây cối",
-            },
-            {
-                "word": "sun",
-                "display": "SU [ N ]",
-                "missing": "n",
-                "mean": "Mặt trời",
-            },
-            {
-                "word": "animal",
-                "display": "ANIMA [ L ]",
-                "missing": "l",
-                "mean": "Động vật",
-            },
-            {
-                "word": "earth",
-                "display": "EART [ H ]",
-                "missing": "h",
-                "mean": "Trái Đất",
-            },
-            {
-                "word": "river",
-                "display": "RIVE [ R ]",
-                "missing": "r",
-                "mean": "Dòng sông",
-            },
-            {
-                "word": "flower",
-                "display": "FLOWE [ R ]",
-                "missing": "r",
-                "mean": "Bông hoa",
-            },
+            {"word": "water", "mean": "Nước"},
+            {"word": "plant", "mean": "Thực vật"},
+            {"word": "tree", "mean": "Cây cối"},
+            {"word": "sun", "mean": "Mặt trời"},
+            {"word": "animal", "mean": "Động vật"},
+            {"word": "earth", "mean": "Trái Đất"},
+            {"word": "river", "mean": "Dòng sông"},
+            {"word": "flower", "mean": "Bông hoa"},
         ],
         "Technology & AI": [
-            {
-                "word": "phone",
-                "display": "PHON [ E ]",
-                "missing": "e",
-                "mean": "Điện thoại",
-            },
-            {
-                "word": "computer",
-                "display": "COMPUTE [ R ]",
-                "missing": "r",
-                "mean": "Máy tính",
-            },
-            {
-                "word": "game",
-                "display": "GAM [ E ]",
-                "missing": "e",
-                "mean": "Trò chơi",
-            },
-            {
-                "word": "screen",
-                "display": "SCREE [ N ]",
-                "missing": "n",
-                "mean": "Màn hình",
-            },
-            {
-                "word": "email",
-                "display": "EMAI [ L ]",
-                "missing": "l",
-                "mean": "Thư điện tử",
-            },
-            {
-                "word": "video",
-                "display": "VIDE [ O ]",
-                "missing": "o",
-                "mean": "Video",
-            },
+            {"word": "phone", "mean": "Điện thoại"},
+            {"word": "computer", "mean": "Máy tính"},
+            {"word": "game", "mean": "Trò chơi"},
+            {"word": "screen", "mean": "Màn hình"},
+            {"word": "email", "mean": "Thư điện tử"},
+            {"word": "video", "mean": "Video"},
         ],
         "Education & Career": [
-            {
-                "word": "study",
-                "display": "STUD [ Y ]",
-                "missing": "y",
-                "mean": "Học tập",
-            },
-            {"word": "book", "display": "BOO [ K ]", "missing": "k", "mean": "Sách"},
-            {
-                "word": "class",
-                "display": "CLAS [ S ]",
-                "missing": "s",
-                "mean": "Lớp học",
-            },
-            {"word": "job", "display": "JO [ B ]", "missing": "b", "mean": "Công việc"},
-            {
-                "word": "teacher",
-                "display": "TEACHE [ R ]",
-                "missing": "r",
-                "mean": "Giáo viên",
-            },
-            {
-                "word": "school",
-                "display": "SCHOO [ L ]",
-                "missing": "l",
-                "mean": "Trường học",
-            },
+            {"word": "study", "mean": "Học tập"},
+            {"word": "book", "mean": "Sách"},
+            {"word": "class", "mean": "Lớp học"},
+            {"word": "job", "mean": "Công việc"},
+            {"word": "teacher", "mean": "Giáo viên"},
+            {"word": "school", "mean": "Trường học"},
         ],
         "Health & Lifestyle": [
-            {
-                "word": "health",
-                "display": "HEALT [ H ]",
-                "missing": "h",
-                "mean": "Sức khỏe",
-            },
-            {"word": "food", "display": "FOO [ D ]", "missing": "d", "mean": "Thức ăn"},
-            {
-                "word": "sleep",
-                "display": "SLEE [ P ]",
-                "missing": "p",
-                "mean": "Ngủ nghỉ",
-            },
-            {
-                "word": "sport",
-                "display": "SPOR [ T ]",
-                "missing": "t",
-                "mean": "Thể thao",
-            },
-            {
-                "word": "fruit",
-                "display": "FRUI [ T ]",
-                "missing": "t",
-                "mean": "Trái cây",
-            },
+            {"word": "health", "mean": "Sức khỏe"},
+            {"word": "food", "mean": "Thức ăn"},
+            {"word": "sleep", "mean": "Ngủ nghỉ"},
+            {"word": "sport", "mean": "Thể thao"},
+            {"word": "fruit", "mean": "Trái cây"},
         ],
     },
     "A2": {
         "Environment & Nature": [
-            {
-                "word": "energy",
-                "display": "ENERG [ Y ]",
-                "missing": "y",
-                "mean": "Năng lượng",
-            },
-            {
-                "word": "forest",
-                "display": "FORES [ T ]",
-                "missing": "t",
-                "mean": "Rừng cây",
-            },
-            {
-                "word": "weather",
-                "display": "WEATHE [ R ]",
-                "missing": "r",
-                "mean": "Thời tiết",
-            },
-            {
-                "word": "nature",
-                "display": "NATUR [ E ]",
-                "missing": "e",
-                "mean": "Tự nhiên",
-            },
+            {"word": "energy", "mean": "Năng lượng"},
+            {"word": "forest", "mean": "Rừng cây"},
+            {"word": "weather", "mean": "Thời tiết"},
+            {"word": "nature", "mean": "Tự nhiên"},
         ],
         "Technology & AI": [
-            {
-                "word": "device",
-                "display": "DEVIC [ E ]",
-                "missing": "e",
-                "mean": "Thiết bị",
-            },
-            {
-                "word": "camera",
-                "display": "CAMER [ A ]",
-                "missing": "a",
-                "mean": "Máy ảnh",
-            },
-            {
-                "word": "digital",
-                "display": "DIGITA [ L ]",
-                "missing": "l",
-                "mean": "Kỹ thuật số",
-            },
-            {
-                "word": "website",
-                "display": "WEBSIT [ E ]",
-                "missing": "e",
-                "mean": "Trang web",
-            },
+            {"word": "device", "mean": "Thiết bị"},
+            {"word": "camera", "mean": "Máy ảnh"},
+            {"word": "digital", "mean": "Kỹ thuật số"},
+            {"word": "website", "mean": "Trang web"},
         ],
         "Education & Career": [
-            {
-                "word": "career",
-                "display": "CAREE [ R ]",
-                "missing": "r",
-                "mean": "Sự nghiệp",
-            },
-            {
-                "word": "lesson",
-                "display": "LESSO [ N ]",
-                "missing": "n",
-                "mean": "Bài học",
-            },
-            {
-                "word": "office",
-                "display": "OFFIC [ E ]",
-                "missing": "e",
-                "mean": "Văn phòng",
-            },
-            {
-                "word": "salary",
-                "display": "SALAR [ Y ]",
-                "missing": "y",
-                "mean": "Tiền lương",
-            },
+            {"word": "career", "mean": "Sự nghiệp"},
+            {"word": "lesson", "mean": "Bài học"},
+            {"word": "office", "mean": "Văn phòng"},
+            {"word": "salary", "mean": "Tiền lương"},
         ],
         "Health & Lifestyle": [
-            {
-                "word": "fitness",
-                "display": "FITNES [ S ]",
-                "missing": "s",
-                "mean": "Thể lực",
-            },
-            {
-                "word": "doctor",
-                "display": "DOCTO [ R ]",
-                "missing": "r",
-                "mean": "Bác sĩ",
-            },
-            {
-                "word": "travel",
-                "display": "TRAVE [ L ]",
-                "missing": "l",
-                "mean": "Du lịch",
-            },
-            {
-                "word": "balance",
-                "display": "BALANC [ E ]",
-                "missing": "e",
-                "mean": "Cân bằng",
-            },
+            {"word": "fitness", "mean": "Thể lực"},
+            {"word": "doctor", "mean": "Bác sĩ"},
+            {"word": "travel", "mean": "Du lịch"},
+            {"word": "balance", "mean": "Cân bằng"},
         ],
     },
     "B1": {
         "Environment & Nature": [
-            {
-                "word": "recycle",
-                "display": "RECYCL [ E ]",
-                "missing": "e",
-                "mean": "Tái chế",
-            },
-            {
-                "word": "climate",
-                "display": "CLIMAT [ E ]",
-                "missing": "e",
-                "mean": "Khí hậu",
-            },
-            {
-                "word": "natural",
-                "display": "NATURA [ L ]",
-                "missing": "l",
-                "mean": "Tự nhiên",
-            },
-            {
-                "word": "wildlife",
-                "display": "WILDLIF [ E ]",
-                "missing": "e",
-                "mean": "Động thực vật hoang dã",
-            },
+            {"word": "recycle", "mean": "Tái chế"},
+            {"word": "climate", "mean": "Khí hậu"},
+            {"word": "natural", "mean": "Tự nhiên"},
+            {"word": "wildlife", "mean": "Động thực vật hoang dã"},
         ],
         "Technology & AI": [
-            {
-                "word": "software",
-                "display": "SOFTWAR [ E ]",
-                "missing": "e",
-                "mean": "Phần mềm",
-            },
-            {
-                "word": "virtual",
-                "display": "VIRTU_L",
-                "missing": "a",
-                "mean": "Thực tế ảo",
-            },
-            {
-                "word": "update",
-                "display": "UPDAT [ E ]",
-                "missing": "e",
-                "mean": "Cập nhật",
-            },
-            {
-                "word": "gadget",
-                "display": "GADGE [ T ]",
-                "missing": "t",
-                "mean": "Thiết bị điện tử nhỏ",
-            },
+            {"word": "software", "mean": "Phần mềm"},
+            {"word": "virtual", "mean": "Thực tế ảo"},
+            {"word": "update", "mean": "Cập nhật"},
+            {"word": "gadget", "mean": "Thiết bị điện tử nhỏ"},
         ],
         "Education & Career": [
-            {
-                "word": "employ",
-                "display": "EMPLO [ Y ]",
-                "missing": "y",
-                "mean": "Tuyển dụng",
-            },
-            {
-                "word": "degree",
-                "display": "DEGRJ [ E ]",
-                "missing": "e",
-                "mean": "Bằng đại học",
-            },
-            {
-                "word": "skill",
-                "display": "SKIL [ L ]",
-                "missing": "l",
-                "mean": "Kỹ năng",
-            },
-            {
-                "word": "income",
-                "display": "INCOM [ E ]",
-                "missing": "e",
-                "mean": "Thu nhập",
-            },
+            {"word": "employ", "mean": "Tuyển dụng"},
+            {"word": "degree", "mean": "Bằng đại học"},
+            {"word": "skill", "mean": "Kỹ năng"},
+            {"word": "income", "mean": "Thu nhập"},
         ],
         "Health & Lifestyle": [
-            {
-                "word": "disease",
-                "display": "DISEAS [ E ]",
-                "missing": "e",
-                "mean": "Bệnh tật",
-            },
-            {
-                "word": "habit",
-                "display": "HABI [ T ]",
-                "missing": "t",
-                "mean": "Thói quen",
-            },
-            {
-                "word": "relax",
-                "display": "RELA [ X ]",
-                "missing": "x",
-                "mean": "Thư giãn",
-            },
-            {
-                "word": "active",
-                "display": "ACTIV [ E ]",
-                "missing": "e",
-                "mean": "Năng động",
-            },
+            {"word": "disease", "mean": "Bệnh tật"},
+            {"word": "habit", "mean": "Thói quen"},
+            {"word": "relax", "mean": "Thư giãn"},
+            {"word": "active", "mean": "Năng động"},
         ],
     },
     "B2": {
         "Environment & Nature": [
-            {
-                "word": "pollution",
-                "display": "POLLUTIO [ N ]",
-                "missing": "n",
-                "mean": "Sự ô nhiễm",
-            },
-            {
-                "word": "ecosystem",
-                "display": "ECOSYSTE [ M ]",
-                "missing": "m",
-                "mean": "Hệ sinh thái",
-            },
-            {
-                "word": "atmosphere",
-                "display": "ATMOSPHER [ E ]",
-                "missing": "e",
-                "mean": "Bầu khí quyển",
-            },
-            {
-                "word": "conservation",
-                "display": "CONSERVATIO [ N ]",
-                "missing": "n",
-                "mean": "Sự bảo tồn",
-            },
-            {
-                "word": "renewable",
-                "display": "RENEWABL [ E ]",
-                "missing": "e",
-                "mean": "Có thể tái tạo",
-            },
+            {"word": "pollution", "mean": "Sự ô nhiễm"},
+            {"word": "ecosystem", "mean": "Hệ sinh thái"},
+            {"word": "atmosphere", "mean": "Bầu khí quyển"},
+            {"word": "conservation", "mean": "Sự bảo tồn"},
+            {"word": "renewable", "mean": "Có thể tái tạo"},
         ],
         "Technology & AI": [
-            {
-                "word": "algorithm",
-                "display": "ALGORITH [ M ]",
-                "missing": "m",
-                "mean": "Thuật toán",
-            },
-            {
-                "word": "automation",
-                "display": "AUTOMATIO [ N ]",
-                "missing": "n",
-                "mean": "Tự động hóa",
-            },
-            {
-                "word": "database",
-                "display": "DATABAS [ E ]",
-                "missing": "e",
-                "mean": "Cơ sở dữ liệu",
-            },
-            {
-                "word": "interface",
-                "display": "INTERFAC [ E ]",
-                "missing": "e",
-                "mean": "Giao diện",
-            },
+            {"word": "algorithm", "mean": "Thuật toán"},
+            {"word": "automation", "mean": "Tự động hóa"},
+            {"word": "database", "mean": "Cơ sở dữ liệu"},
+            {"word": "interface", "mean": "Giao diện"},
         ],
         "Education & Career": [
-            {
-                "word": "academic",
-                "display": "ACADEMI [ C ]",
-                "missing": "c",
-                "mean": "Học thuật",
-            },
-            {
-                "word": "curriculum",
-                "display": "CURRICULU [ M ]",
-                "missing": "m",
-                "mean": "Chương trình học",
-            },
-            {
-                "word": "scholarship",
-                "display": "SCHOLARSHI [ P ]",
-                "missing": "p",
-                "mean": "Học bổng",
-            },
-            {
-                "word": "profession",
-                "display": "PROFESSIO [ N ]",
-                "missing": "n",
-                "mean": "Nghề nghiệp",
-            },
-            {
-                "word": "qualification",
-                "display": "QUALIFICATIO [ N ]",
-                "missing": "n",
-                "mean": "Trình độ chuyên môn",
-            },
+            {"word": "academic", "mean": "Học thuật"},
+            {"word": "curriculum", "mean": "Chương trình học"},
+            {"word": "scholarship", "mean": "Học bổng"},
+            {"word": "profession", "mean": "Nghề nghiệp"},
+            {"word": "qualification", "mean": "Trình độ chuyên môn"},
         ],
         "Health & Lifestyle": [
-            {
-                "word": "nutrition",
-                "display": "NUTRITIO [ N ]",
-                "missing": "n",
-                "mean": "Dinh dưỡng",
-            },
-            {
-                "word": "metabolism",
-                "display": "METABOLIS [ M ]",
-                "missing": "m",
-                "mean": "Trao đổi chất",
-            },
-            {
-                "word": "wellbeing",
-                "display": "WELLBEIN [ G ]",
-                "missing": "g",
-                "mean": "Sức khỏe toàn diện",
-            },
-            {
-                "word": "epidemic",
-                "display": "EPIDEMI [ C ]",
-                "missing": "c",
-                "mean": "Dịch bệnh",
-            },
+            {"word": "nutrition", "mean": "Dinh dưỡng"},
+            {"word": "metabolism", "mean": "Trao đổi chất"},
+            {"word": "wellbeing", "mean": "Sức khỏe toàn diện"},
+            {"word": "epidemic", "mean": "Dịch bệnh"},
         ],
     },
     "C1": {
         "Environment & Nature": [
-            {
-                "word": "biodiversity",
-                "display": "BIODIVERSIT [ Y ]",
-                "missing": "y",
-                "mean": "Đa dạng sinh học",
-            },
-            {
-                "word": "catastrophic",
-                "display": "CATASTROPHI [ C ]",
-                "missing": "c",
-                "mean": "Thảm khốc",
-            },
-            {
-                "word": "deforestation",
-                "display": "DEFORESTATIO [ N ]",
-                "missing": "n",
-                "mean": "Nạn phá rừng",
-            },
-            {
-                "word": "extinction",
-                "display": "EXTINCTIO [ N ]",
-                "missing": "n",
-                "mean": "Sự tuyệt chủng",
-            },
+            {"word": "biodiversity", "mean": "Đa dạng sinh học"},
+            {"word": "catastrophic", "mean": "Thảm khốc"},
+            {"word": "deforestation", "mean": "Nạn phá rừng"},
+            {"word": "extinction", "mean": "Sự tuyệt chủng"},
         ],
         "Technology & AI": [
-            {
-                "word": "cybersecurity",
-                "display": "CYBERSECURIT [ Y ]",
-                "missing": "y",
-                "mean": "An ninh mạng",
-            },
-            {
-                "word": "cryptography",
-                "display": "CRYPTOGRAPh [ Y ]",
-                "missing": "y",
-                "mean": "Mật mã học",
-            },
-            {
-                "word": "implementation",
-                "display": "IMPLEMENTATIO [ N ]",
-                "missing": "n",
-                "mean": "Sự triển khai",
-            },
-            {
-                "word": "biometrics",
-                "display": "BIOMETRIC [ S ]",
-                "missing": "s",
-                "mean": "Sinh trắc học",
-            },
+            {"word": "cybersecurity", "mean": "An ninh mạng"},
+            {"word": "cryptography", "mean": "Mật mã học"},
+            {"word": "implementation", "mean": "Sự triển khai"},
+            {"word": "biometrics", "mean": "Sinh trắc học"},
         ],
         "Education & Career": [
-            {
-                "word": "dissertation",
-                "display": "DISSERTATIO [ N ]",
-                "missing": "n",
-                "mean": "Luận văn",
-            },
-            {
-                "word": "pedagogy",
-                "display": "PEDAGOG [ Y ]",
-                "missing": "y",
-                "mean": "Sư phạm",
-            },
-            {
-                "word": "entrepreneur",
-                "display": "ENTREPRENEU [ R ]",
-                "missing": "r",
-                "mean": "Doanh nhân",
-            },
-            {
-                "word": "bureaucracy",
-                "display": "BUREAUCRAC [ Y ]",
-                "missing": "y",
-                "mean": "Nạn quan liêu",
-            },
+            {"word": "dissertation", "mean": "Luận văn"},
+            {"word": "pedagogy", "mean": "Sư phạm"},
+            {"word": "entrepreneur", "mean": "Doanh nhân"},
+            {"word": "bureaucracy", "mean": "Nạn quan liêu"},
         ],
         "Health & Lifestyle": [
-            {
-                "word": "cardiovascular",
-                "display": "CARDIOVASCULA [ R ]",
-                "missing": "r",
-                "mean": "Tim mạch",
-            },
-            {
-                "word": "longevity",
-                "display": "LONGEVIT [ Y ]",
-                "missing": "y",
-                "mean": "Tuổi thọ",
-            },
-            {
-                "word": "psychological",
-                "display": "PSYCHOLOGICA [ L ]",
-                "missing": "l",
-                "mean": "Tâm lý học",
-            },
-            {
-                "word": "pharmaceutical",
-                "display": "PHARMACEUTICA [ L ]",
-                "missing": "l",
-                "mean": "Dược phẩm",
-            },
+            {"word": "cardiovascular", "mean": "Tim mạch"},
+            {"word": "longevity", "mean": "Tuổi thọ"},
+            {"word": "psychological", "mean": "Tâm lý học"},
+            {"word": "pharmaceutical", "mean": "Dược phẩm"},
         ],
     },
     "C2": {
         "Environment & Nature": [
-            {
-                "word": "sustainability",
-                "display": "SUSTAINABILIT [ Y ]",
-                "missing": "y",
-                "mean": "Tính bền vững",
-            },
-            {
-                "word": "anthropogenic",
-                "display": "ANTHROPOGENI [ C ]",
-                "missing": "c",
-                "mean": "Do con người gây ra",
-            },
-            {
-                "word": "biogeochemical",
-                "display": "BIOGEOCHEMICAL [ L ]",
-                "missing": "l",
-                "mean": "Sinh địa hóa",
-            },
-            {
-                "word": "desertification",
-                "display": "DESERTIFICATIO [ N ]",
-                "missing": "n",
-                "mean": "Hoang mạc hóa",
-            },
+            {"word": "sustainability", "mean": "Tính bền vững"},
+            {"word": "anthropogenic", "mean": "Do con người gây ra"},
+            {"word": "biogeochemical", "mean": "Sinh địa hóa"},
+            {"word": "desertification", "mean": "Hoang mạc hóa"},
         ],
         "Technology & AI": [
-            {
-                "word": "supercomputing",
-                "display": "SUPERCOMPUTIN [ G ]",
-                "missing": "g",
-                "mean": "Siêu máy tính",
-            },
-            {
-                "word": "epistemology",
-                "display": "EPISTEMOLOG [ Y ]",
-                "missing": "y",
-                "mean": "Nhận thức luận",
-            },
-            {
-                "word": "interoperability",
-                "display": "INTEROPERABILIT [ Y ]",
-                "missing": "y",
-                "mean": "Tính tương tác",
-            },
+            {"word": "supercomputing", "mean": "Siêu máy tính"},
+            {"word": "epistemology", "mean": "Nhận thức luận"},
+            {"word": "interoperability", "mean": "Tính tương tác"},
         ],
         "Education & Career": [
-            {
-                "word": "institutionalization",
-                "display": "INSTITUTIONALIZATIO [ N ]",
-                "missing": "n",
-                "mean": "Thể chế hóa",
-            },
-            {
-                "word": "interdisciplinary",
-                "display": "INTERDISCIPLINAR [ Y ]",
-                "missing": "y",
-                "mean": "Liên ngành",
-            },
+            {"word": "institutionalization", "mean": "Thể chế hóa"},
+            {"word": "interdisciplinary", "mean": "Liên ngành"},
         ],
         "Health & Lifestyle": [
-            {
-                "word": "neuroplasticity",
-                "display": "NEUROPLASTICIT [ Y ]",
-                "missing": "y",
-                "mean": "Tính dẻo thần kinh",
-            },
-            {
-                "word": "psychoneuroimmunology",
-                "display": "PSYCHONEUROIMMUNOLOG [ Y ]",
-                "missing": "y",
-                "mean": "Miễn dịch học thần kinh",
-            },
-            {
-                "word": "homeostasis",
-                "display": "HOMEOSTASI [ S ]",
-                "missing": "s",
-                "mean": "Cân bằng nội môi",
-            },
+            {"word": "neuroplasticity", "mean": "Tính dẻo thần kinh"},
+            {"word": "psychoneuroimmunology", "mean": "Miễn dịch học thần kinh"},
+            {"word": "homeostasis", "mean": "Cân bằng nội môi"},
         ],
     },
 }
 
-database_json = json.dumps(vocab_database)
+# Tiền xử lý để tự động ẩn ký tự ngẫu nhiên cho từng từ
+processed_database = {}
+for lvl, topics in raw_vocab_database.items():
+  processed_database[lvl] = {}
+  for top, words in topics.items():
+    processed_words = []
+    for item in words:
+      w = item["word"].upper()
+      idx = random.randint(
+          0, len(w) - 1
+      )  # Chọn ngẫu nhiên vị trí chữ cái bị ẩn
+      missing_char = w[idx].lower()
+
+      # Tạo chuỗi hiển thị dạng trực quan (Ví dụ: WAT [ E ] R)
+      display_str = ""
+      for i, char in enumerate(w):
+        if i == idx:
+          display_str += f" [{char}] "
+        else:
+          display_str += char
+
+      processed_words.append({
+          "word": item["word"],
+          "display": display_str.strip(),
+          "missing": missing_char,
+          "mean": item["mean"],
+      })
+    processed_database[lvl][top] = processed_words
+
+database_json = json.dumps(processed_database)
 
 if keyboard_layout == "Laptop / PC (QWERTY)":
   kb_rows = ["qwertyuiop", "asdfghjkl", "zxcvbnm"]
@@ -914,7 +444,7 @@ game_code = (
             usedVocabQueue.push(item.word);
             if (usedVocabQueue.length > 5) usedVocabQueue.shift();
 
-            let randomX = Math.random() * (canvas.width - 260) + 15;
+            let randomX = Math.random() * (canvas.width - 280) + 15;
             let currentSpeed = 0.3 + (levelsOrder.indexOf(currentLevel) * 0.04);
 
             targets.push({
@@ -941,7 +471,7 @@ game_code = (
                         x: player.x + player.width / 2,
                         y: player.y,
                         targetId: i,
-                        targetX: t.x + 110,
+                        targetX: t.x + 120,
                         targetY: t.y + 25,
                         speed: 10
                     });
@@ -996,7 +526,7 @@ game_code = (
                     score += 10;
                     document.getElementById("score-info").innerText = "🏆 Điểm: " + score;
                     playSound("hit");
-                    createExplosion(targetObj.x + 110, targetObj.y + 25);
+                    createExplosion(targetObj.x + 120, targetObj.y + 25);
 
                     if (score > 0 && score % 100 === 0) {
                         let currentIndex = levelsOrder.indexOf(currentLevel);
@@ -1054,19 +584,19 @@ game_code = (
                 ctx.fillStyle = "#ff9800";
                 ctx.shadowColor = "#ff5722";
                 ctx.shadowBlur = 10;
-                // Phóng to kích thước thẻ chứa từ vựng
-                ctx.fillRect(t.x, t.y, 230, 60);
+                // Khung chứa từ vựng rộng rãi
+                ctx.fillRect(t.x, t.y, 250, 60);
                 ctx.shadowBlur = 0;
 
-                // Phóng to cực đại chữ tiếng Anh (24px đậm)
+                // Chữ tiếng Anh hiển thị rõ ràng, chữ cái cần điền nằm trong ngoặc vuông [ ]
                 ctx.fillStyle = "#ffffff";
-                ctx.font = "bold 24px Arial";
-                ctx.fillText(t.display, t.x + 12, t.y + 33);
+                ctx.font = "bold 22px Arial";
+                ctx.fillText(t.display, t.x + 12, t.y + 32);
 
-                // Phóng to nghĩa tiếng Việt (14px)
+                // Nghĩa tiếng Việt
                 ctx.fillStyle = "#f1fa8c";
-                ctx.font = "bold italic 14px Arial";
-                ctx.fillText("(" + t.mean + ")", t.x + 12, t.y + 52);
+                ctx.font = "bold italic 13px Arial";
+                ctx.fillText("(" + t.mean + ")", t.x + 12, t.y + 50);
             });
 
             ctx.fillStyle = "#00ffff";
